@@ -1,7 +1,66 @@
 import React, { Component } from 'react';
 import { Link } from 'react-router-dom';
+import { search, update } from './BooksAPI';
+import { includes, uniqBy } from 'lodash';
+import Book from './Book';
 
 class Search extends Component {
+    state = {
+        searchQuery: '',
+        searchResults: []
+    }
+
+    onInputChange(searchQuery) {
+        this.setState({ searchQuery }, () => {
+            if(searchQuery) {
+                search(searchQuery).then((searchResults) => {
+                    console.log(searchResults);
+                    this.matchShelvesToSearch(uniqBy(searchResults, 'id'));
+                });
+            }
+        })
+    }
+
+    matchShelvesToSearch(searchResults, newShelves) {
+        const { wantToRead, read, currentlyReading } = newShelves || this.props.shelves;
+
+        searchResults.forEach((book) => {
+            if(includes(wantToRead, book.id)) {
+                book.shelf = 'wantToRead';
+            }
+            else if(includes(read, book.id)) {
+                book.shelf = 'read';
+            }
+            else if(includes(currentlyReading, book.id)) {
+                book.shelf = 'currentlyReading';
+            } else {
+                book.shelf = 'none';
+            }
+        });
+
+        this.setState({ searchResults });
+    }
+
+    onShelfChange(book, shelf) {
+        update(book, shelf).then((res) => {
+            this.props.refreshShelves(res);
+        });
+    }
+
+    componentWillReceiveProps(props){
+        this.matchShelvesToSearch(this.state.searchResults, props.shelves);
+    }
+
+    getSearchResults() {
+        return this.state.searchResults.map((book) => {
+            return (<Book
+                book={book}
+                onShelfChange={(book, shelf) => this.onShelfChange(book, shelf)}
+                key={book.id}
+            />)
+        })
+    }
+
     render() {
         return (
             <div className="search-books">
@@ -11,20 +70,13 @@ class Search extends Component {
                         className='close-search'
                     >Close</Link>
                     <div className="search-books-input-wrapper">
-                        {/* 
-                        NOTES: The search from BooksAPI is limited to a particular set of search terms.
-                        You can find these search terms here:
-                        https://github.com/udacity/reactnd-project-myreads-starter/blob/master/SEARCH_TERMS.md
-                        
-                        However, remember that the BooksAPI.search method DOES search by title or author. So, don't worry if
-                        you don't find a specific author or title. Every search is limited by search terms.
-                        */}
-                        <input type="text" placeholder="Search by title or author"/>
-                        
+                        <input type="text" onChange={(evt) => this.onInputChange(evt.target.value)} placeholder="Search by title or author" />
                     </div>
                 </div>
                 <div className="search-books-results">
-                    <ol className="books-grid"></ol>
+                    <ol className="books-grid">
+                        {this.getSearchResults()}
+                    </ol>
                 </div>
             </div>
         )

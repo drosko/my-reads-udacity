@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { getAll, update } from './BooksAPI';
 import Book from './Book';
 
-
 class Shelves extends Component {
 
     constructor(props) {
@@ -14,7 +13,6 @@ class Shelves extends Component {
         }
 
         this.onShelfChange = this.onShelfChange.bind(this);
-
     }
 
     componentDidMount() {
@@ -22,6 +20,7 @@ class Shelves extends Component {
 
         getAll().then((books) => {
             _this.setState({books});
+            _this.props.updateAppState(books);
             console.log(books);
         });
     }
@@ -49,6 +48,7 @@ class Shelves extends Component {
                 }
             })
             this.setState({ books: _books });
+            this.props.updateAppState(_books);
         });
     }
 
