@@ -1,36 +1,20 @@
 import React, { Component } from 'react';
 import { Link } from 'react-router-dom';
-import { getAll, update } from './BooksAPI';
+import { PropTypes } from 'prop-types';
 import Book from './Book';
 
 class Shelves extends Component {
-
-    constructor(props) {
-        super(props);
-
-        this.state = {
-            books: []
-        }
-
-        this.onShelfChange = this.onShelfChange.bind(this);
-    }
-
-    componentDidMount() {
-        const _this = this;
-
-        getAll().then((books) => {
-            _this.setState({books});
-            _this.props.updateAppState(books);
-            console.log(books);
-        });
+    static propTypes = {
+        books: PropTypes.array.isRequired,
+        onShelfChange: PropTypes.func.isRequired
     }
 
     getShelveBooks(shelf) {
-        return this.state.books.map((book) => {
+        return this.props.books.map((book) => {
             if(shelf === book.shelf) {
                 return (<Book
                     book={book}
-                    onShelfChange={this.onShelfChange}
+                    onShelfChange={this.props.onShelfChange}
                     key={book.id}
                 />)
             }
@@ -38,22 +22,7 @@ class Shelves extends Component {
         })
     }
 
-    onShelfChange(book, shelf) {
-        let _books = this.state.books;
-
-        update(book, shelf).then((res) => {
-            _books.forEach((_book) => {
-                if(_book.id === book.id) {
-                    _book.shelf = shelf;
-                }
-            })
-            this.setState({ books: _books });
-            this.props.updateAppState(_books);
-        });
-    }
-
     render() {
-
         return ( 
             <div className="list-books">
                 <div className="list-books-title">
